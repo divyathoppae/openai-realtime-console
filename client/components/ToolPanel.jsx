@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import ExamplePrompts from './ExamplePrompts';
-import { handleCustomerInput, sessionUpdate } from "../utils/jsonParser";
 
 // Define multiple function tools for practice
 export const tools = {
@@ -121,25 +120,28 @@ export const tools = {
       required: ["content", "size"],
     },
   },
-  suggest_case: {
-    type: "function",
-    name: "suggest_case",
-    description: "Suggest a case to the customer based on their request.",
-    parameters: {
-      type: "object",
-      strict: true,
-      properties: {
-        case_name: {
-          type: "string",
-          description: "The name of the case to suggest.",
-        },
-        case_description: {
-          type: "string",
-          description: "A brief description of the case.",
-        },
-      },
-      required: ["case_name", "case_description"],
+};
+
+const sessionUpdate = {
+  type: "session.update", 
+  session: {
+    tools: Object.values(tools),
+    tool_choice: "auto",
+    voice: "alloy", // Set voice model
+    instructions: "You are a helpful AI assistant. Always speak in English. When calling functions, provide clear explanations of what you're doing.",
+    input_audio_format: "pcm16",
+    output_audio_format: "pcm16",
+    input_audio_transcription: {
+      model: "whisper-1"
     },
+    turn_detection: {
+      type: "server_vad",
+      threshold: 0.5,
+      prefix_padding_ms: 300,
+      silence_duration_ms: 200
+    },
+    temperature: 0.8,
+    max_response_output_tokens: 1000
   },
 };
 
@@ -241,21 +243,6 @@ function QRCodeOutput({ functionCallOutput }) {
   );
 }
 
-// Component to display case suggestion output
-function CaseSuggestionOutput({ functionCallOutput }) {
-  const { case_name, case_description } = JSON.parse(functionCallOutput.arguments);
-
-  return (
-    <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-      <h3 className="font-bold mb-2">💡 Case Suggestion</h3>
-      <div className="text-sm space-y-2">
-        <div>Case Name: <span className="font-semibold">{case_name}</span></div>
-        <div>Description: <span className="font-semibold">{case_description}</span></div>
-      </div>
-    </div>
-  );
-}
-
 // Main function output component that routes to specific outputs
 function FunctionCallOutput({ functionCallOutput }) {
   const components = {
@@ -264,7 +251,6 @@ function FunctionCallOutput({ functionCallOutput }) {
     calculate: CalculationOutput,
     create_todo: TodoOutput,
     generate_qr_code: QRCodeOutput,
-    suggest_case: CaseSuggestionOutput,
   };
 
   const Component = components[functionCallOutput.name];
@@ -301,22 +287,13 @@ export default function ToolPanel({
 }) {
   const [functionAdded, setFunctionAdded] = useState(false);
   const [functionCallOutputs, setFunctionCallOutputs] = useState([]);
-  const [customerInput, setCustomerInput] = useState("");
-
-  const handleInputSubmit = () => {
-    if (customerInput.trim()) {
-      console.log("Tool call triggered with input:", customerInput); // Log the tool call
-      handleCustomerInput(customerInput, sendClientEvent);
-      setCustomerInput(""); // Clear the input field
-    }
-  };
 
   useEffect(() => {
     if (!events || events.length === 0) return;
 
     const firstEvent = events[events.length - 1];
     if (!functionAdded && firstEvent.type === "session.created") {
-      sendClientEvent(sessionUpdate); // Use sessionUpdate when the session is created
+      sendClientEvent(sessionUpdate);
       setFunctionAdded(true);
     }
 
@@ -328,11 +305,9 @@ export default function ToolPanel({
       mostRecentEvent.response.output.forEach((output) => {
         if (output.type === "function_call" && tools[output.name]) {
           // Add the new function call output to the list
-          setFunctionCallOutputs((prev) => {
+          setFunctionCallOutputs(prev => {
             // Check if this function call is already in the list
-            const existingIndex = prev.findIndex(
-              (item) => item.call_id === output.call_id
-            );
+            const existingIndex = prev.findIndex(item => item.call_id === output.call_id);
             if (existingIndex >= 0) {
               // Update existing entry
               const newOutputs = [...prev];
@@ -395,47 +370,27 @@ export default function ToolPanel({
         sendTextMessage={sendTextMessage} 
         isSessionActive={isSessionActive} 
       />
-
+      
       <div className="flex-1 bg-gray-50 rounded-md p-4 overflow-y-auto">
         <h2 className="text-lg font-bold mb-4">🛠️ Function Calling Tools</h2>
-
+        
         {!isSessionActive ? (
           <div className="text-center py-8">
             <p className="text-gray-600 mb-4">Start the session to use function calling</p>
             {getToolInstructions()}
           </div>
-        ) : (
+        ) : functionCallOutputs.length > 0 ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <input
-                type="text"
-                value={customerInput}
-                onChange={(e) => setCustomerInput(e.target.value)}
-                placeholder="Enter a request (e.g., Update Address)"
-                className="flex-1 border border-gray-300 rounded-md p-2"
-              />
-              <button
-                onClick={handleInputSubmit}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-              >
-                Submit
-              </button>
-            </div>
-
-            {functionCallOutputs.length > 0 ? (
-              <div className="space-y-4">
-                {functionCallOutputs.map((output, index) => (
-                  <div key={`${output.call_id}-${index}`} className="border-b border-gray-200 pb-4 last:border-b-0">
-                    <FunctionCallOutput functionCallOutput={output} />
-                  </div>
-                ))}
+            {functionCallOutputs.map((output, index) => (
+              <div key={`${output.call_id}-${index}`} className="border-b border-gray-200 pb-4 last:border-b-0">
+                <FunctionCallOutput functionCallOutput={output} />
               </div>
-            ) : (
-              <div>
-                <p className="text-gray-600 mb-4">Functions are ready! Try asking for something...</p>
-                {getToolInstructions()}
-              </div>
-            )}
+            ))}
+          </div>
+        ) : (
+          <div>
+            <p className="text-gray-600 mb-4">Functions are ready! Try asking for something...</p>
+            {getToolInstructions()}
           </div>
         )}
       </div>
