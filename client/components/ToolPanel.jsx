@@ -3,7 +3,7 @@ import ExamplePrompts from './ExamplePrompts';
 import { handleCustomerInput, sessionUpdate } from "../utils/jsonParser";
 
 // Define multiple function tools for practice
-const tools = {
+export const tools = {
   display_color_palette: {
     type: "function",
     name: "display_color_palette",

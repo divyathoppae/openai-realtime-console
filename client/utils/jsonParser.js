@@ -1,4 +1,5 @@
 import jsonData from './BP-127169.json';
+import { tools } from '../components/ToolPanel';
 
 export function findCaseForRequest(request, jsonData) {
   console.log("findCaseForRequest called with request:", request);
@@ -50,7 +51,6 @@ Occupation/Employment: Software engineer
 Reason for contact: Address Change
 Mood: "happy"
 Customer Details: 
-
 
 VERY IMPORTANT - You must adhere to the following rules:
 
