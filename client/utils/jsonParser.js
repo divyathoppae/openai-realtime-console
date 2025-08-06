@@ -1,5 +1,11 @@
-import jsonData from './BP-127169.json';
-import { tools } from '../components/ToolPanel';
+import { readFileSync } from 'fs';
+
+const jsonData = JSON.parse(readFileSync(new URL('../BP.json', import.meta.url)));
+
+import '../components/ToolPanel';
+
+
+
 
 export function findCaseForRequest(request, jsonData) {
   console.log("findCaseForRequest called with request:", request);
@@ -31,66 +37,44 @@ export function mapEntity(entityName, entityValue, sendClientEvent) {
   });
 }
 
-const sessionUpdate = {
-  type: "session.update",
-  session: {
-    tools: Object.values(tools),
-    tool_choice: "auto",
-    voice: "alloy",
-    instructions: `
-      Act as John Smith, a customer who has contacted Elevance Health  through the chatbot on their website. The purpose of this conversation is to simulate a real-world Elevance Health customer (John Smith) so that a live customer service representative (AGENT) can gain practical experience interacting with customers. The responses that are generated for John Smith should reflect their mood, personality and the task at hand. Responses should be 1-4 sentences and as realistic as possible. 
 
-You must act as:
-Name: John Smith
-DOB: 01/01/1995
-Age: 30
-Address: 123 Main street, Melrose, MA 02176
-Email: John.smith@Dell.com
-Phone: 1-203-245-1234
-Occupation/Employment: Software engineer
-Reason for contact: Address Change
-Mood: "happy"
-Customer Details: 
 
-VERY IMPORTANT - You must adhere to the following rules:
-
-1) Every response that you generate must be written in the tone and voice of John Smith.
-2) Whenever providing new information with Elevance Health (anything that does not exist in your customer persona) you must use realistic and believable mock data. e.g. for address make up something like 55 Elm Street West, East Boston, MA 12345
-    `,
-    input_audio_format: "pcm16",
-    output_audio_format: "pcm16",
-    input_audio_transcription: {
-      model: "whisper-1",
-    },
-    turn_detection: {
-      type: "server_vad",
-      threshold: 0.5,
-      prefix_padding_ms: 300,
-      silence_duration_ms: 200,
-    },
-    temperature: 0.8,
-    max_response_output_tokens: 1000,
-  },
-};
-
-const testRequest = "Update Contact Information"; // Example of a generic request
+const testRequest = "Member Date of Birth"; // Example of a generic request
 const result = findCaseForRequest(testRequest, jsonData);
 console.log(result);
 
 // Function to simulate a tool call for case suggestion
-export function suggestCaseToolCall(request) {
-  console.log("Tool call: suggest_case", { request });
-  // Simulate a tool call by logging the request
+export function suggestCaseToolCall(request, jsonData) {
+  console.log("suggestCaseToolCall invoked with request:", request);
+  const caseDetails = findCaseForRequest(request, jsonData);
+  if (caseDetails) {
+    console.log("Tool call: suggest_case", caseDetails);
+    return caseDetails;
+  } else {
+    console.log("No matching case found for request:", request);
+    return null;
+  }
 }
 
 // Updated handler for customer input to trigger both tool call and entity mapping
 export function handleCustomerInput(input, sendClientEvent) {
-  console.log("Customer input received:", input);
+  console.log("handleCustomerInput invoked with input:", input);
 
   // Trigger the tool call for case suggestion
-  suggestCaseToolCall(input);
+  const caseDetails = suggestCaseToolCall(input, jsonData);
+
+  if (caseDetails) {
+    console.log("Emitting suggest_case event with case details:", caseDetails);
+    sendClientEvent({
+      type: "suggest_case",
+      case: caseDetails,
+    });
+  } else {
+    console.log("No case details to emit for input:", input);
+  }
 
   // Emit a map entity event for the input
+  console.log("Emitting map_entity event for input:", input);
   mapEntity("customer_request", input, sendClientEvent);
 }
 
@@ -99,5 +83,6 @@ const mockSendClientEvent = (event) => {
   console.log("Event emitted:", event);
 };
 
-const exampleInput = "Update Address";
+const exampleInput = "Member Date of Birth";
 handleCustomerInput(exampleInput, mockSendClientEvent);
+

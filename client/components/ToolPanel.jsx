@@ -3,6 +3,28 @@ import ExamplePrompts from './ExamplePrompts';
 
 // Define multiple function tools for practice
 export const tools = {
+  suggest_case: {
+  type: "function",
+  name: "suggest_case",
+  description: "Suggest a case to the customer based on their request.",
+  parameters: {
+    type: "object",
+    strict: true,
+    properties: {
+      case_name: {
+        type: "string",
+        description: "The name of the case to suggest.",
+      },
+      case_description: {
+        type: "string",
+        description: "A brief description of the case.",
+      },
+    },
+    required: ["case_name", "case_description"],
+  },
+},
+
+
   display_color_palette: {
     type: "function",
     name: "display_color_palette",
@@ -122,28 +144,70 @@ export const tools = {
   },
 };
 
+// const sessionUpdate = {
+//   type: "session.update", 
+//   session: {
+//     tools: Object.values(tools),
+//     tool_choice: "auto",
+//     voice: "alloy", // Set voice model
+//     instructions: "You are a helpful AI assistant. Always speak in English. When calling functions, provide clear explanations of what you're doing.",
+//     input_audio_format: "pcm16",
+//     output_audio_format: "pcm16",
+//     input_audio_transcription: {
+//       model: "whisper-1"
+//     },
+//     turn_detection: {
+//       type: "server_vad",
+//       threshold: 0.5,
+//       prefix_padding_ms: 300,
+//       silence_duration_ms: 200
+//     },
+//     temperature: 0.8,
+//     max_response_output_tokens: 1000
+//   },
+// };
 const sessionUpdate = {
-  type: "session.update", 
+  type: "session.update",
   session: {
     tools: Object.values(tools),
     tool_choice: "auto",
-    voice: "alloy", // Set voice model
-    instructions: "You are a helpful AI assistant. Always speak in English. When calling functions, provide clear explanations of what you're doing.",
+    voice: "alloy",
+    instructions: `
+      Act as John Smith, a customer who has contacted Elevance Health  through the chatbot on their website. The purpose of this conversation is to simulate a real-world Elevance Health customer (John Smith) so that a live customer service representative (AGENT) can gain practical experience interacting with customers. The responses that are generated for John Smith should reflect their mood, personality and the task at hand. Responses should be 1-4 sentences and as realistic as possible. 
+
+You must act as:
+Name: John Smith
+DOB: 01/01/1995
+Age: 30
+Address: 123 Main street, Melrose, MA 02176
+Email: John.smith@Dell.com
+Phone: 1-203-245-1234
+Occupation/Employment: Software engineer
+Reason for contact: Address Change
+Mood: "happy"
+Customer Details: 
+
+VERY IMPORTANT - You must adhere to the following rules:
+
+1) Every response that you generate must be written in the tone and voice of John Smith.
+2) Whenever providing new information with Elevance Health (anything that does not exist in your customer persona) you must use realistic and believable mock data. e.g. for address make up something like 55 Elm Street West, East Boston, MA 12345
+    `,
     input_audio_format: "pcm16",
     output_audio_format: "pcm16",
     input_audio_transcription: {
-      model: "whisper-1"
+      model: "whisper-1",
     },
     turn_detection: {
       type: "server_vad",
       threshold: 0.5,
       prefix_padding_ms: 300,
-      silence_duration_ms: 200
+      silence_duration_ms: 200,
     },
     temperature: 0.8,
-    max_response_output_tokens: 1000
+    max_response_output_tokens: 1000,
   },
 };
+
 
 // Component to display color palette output
 function ColorPaletteOutput({ functionCallOutput }) {
@@ -184,6 +248,18 @@ function WeatherOutput({ functionCallOutput }) {
     </div>
   );
 }
+
+function SuggestCaseOutput({ functionCallOutput }) {
+  const { case_name, case_description } = JSON.parse(functionCallOutput.arguments);
+  return (
+    <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+      <h3 className="font-bold mb-2">📂 Suggested Case</h3>
+      <p><strong>Case Name:</strong> {case_name}</p>
+      <p><strong>Description:</strong> {case_description}</p>
+    </div>
+  );
+}
+
 
 // Component to display calculation output
 function CalculationOutput({ functionCallOutput }) {
@@ -251,6 +327,7 @@ function FunctionCallOutput({ functionCallOutput }) {
     calculate: CalculationOutput,
     create_todo: TodoOutput,
     generate_qr_code: QRCodeOutput,
+      suggest_case: SuggestCaseOutput, // ✅ Add this
   };
 
   const Component = components[functionCallOutput.name];
