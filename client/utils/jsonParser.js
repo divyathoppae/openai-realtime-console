@@ -1,4 +1,4 @@
-import jsonData from './assets/BP-127169.json';
+import jsonData from './BP-127169.json';
 
 export function findCaseForRequest(request, jsonData) {
   console.log("findCaseForRequest called with request:", request);
