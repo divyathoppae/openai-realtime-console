@@ -1,8 +1,8 @@
-import { readFileSync } from 'fs';
+// import { readFileSync } from 'fs';
 
-const jsonData = JSON.parse(readFileSync(new URL('../BP.json', import.meta.url)));
-
-import '../components/ToolPanel';
+// const jsonData = JSON.parse(readFileSync(new URL('../BP.json', import.meta.url)));
+import jsonData from '../BP.json';
+import ToolPanel from '../components/ToolPanel';
 
 
 

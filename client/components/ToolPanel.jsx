@@ -183,7 +183,7 @@ Address: 123 Main street, Melrose, MA 02176
 Email: John.smith@Dell.com
 Phone: 1-203-245-1234
 Occupation/Employment: Software engineer
-Reason for contact: Address Change
+Reason for contact: Date of  Birth Change
 Mood: "happy"
 Customer Details: 
 
@@ -327,7 +327,7 @@ function FunctionCallOutput({ functionCallOutput }) {
     calculate: CalculationOutput,
     create_todo: TodoOutput,
     generate_qr_code: QRCodeOutput,
-      suggest_case: SuggestCaseOutput, // ✅ Add this
+    suggest_case: SuggestCaseOutput, // ✅ Add this
   };
 
   const Component = components[functionCallOutput.name];
@@ -433,6 +433,7 @@ export default function ToolPanel({
           <li>• Mathematical calculations</li>
           <li>• Create a todo item</li>
           <li>• Generate a QR code</li>
+          <li>• Suggest a case based on my request</li>
         </ul>
         <p className="text-xs text-gray-500 mt-3">
           {toolNames.length} functions available: {toolNames.join(", ")}
