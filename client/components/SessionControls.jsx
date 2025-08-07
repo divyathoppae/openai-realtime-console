@@ -27,13 +27,13 @@ function SessionStopped({ startSession }) {
   );
 }
 
-function SessionActive({ stopSession, sendTextMessage }) {
+function SessionActive({ stopSession, sendTextMessage, sendClientEvent }) {
   const [message, setMessage] = useState("");
 
   function handleSendClientEvent() {
     sendTextMessage(message);
     
-  handleCustomerInput(message, sendClientEvent); // 🔥 This triggers suggest_case + map_entity
+    handleCustomerInput(message, sendClientEvent); //This triggers suggest_case + map_entity
 
     setMessage("");
   }

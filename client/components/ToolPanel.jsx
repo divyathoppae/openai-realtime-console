@@ -382,19 +382,23 @@ export default function ToolPanel({
       mostRecentEvent.response.output.forEach((output) => {
         if (output.type === "function_call" && tools[output.name]) {
           // Add the new function call output to the list
-          setFunctionCallOutputs(prev => {
-            // Check if this function call is already in the list
-            const existingIndex = prev.findIndex(item => item.call_id === output.call_id);
+          setFunctionCallOutputs((prev) => {
+            const existingIndex = prev.findIndex(
+              (item) => item.call_id === output.call_id
+            );
             if (existingIndex >= 0) {
-              // Update existing entry
               const newOutputs = [...prev];
               newOutputs[existingIndex] = output;
               return newOutputs;
             } else {
-              // Add new entry at the beginning
               return [output, ...prev];
             }
           });
+
+          // Invoke handleModelResponse for model's voice responses
+          if (output.name === "suggest_case") {
+            handleModelResponse(output.arguments, sendClientEvent);
+          }
 
           // For color palette, ask for feedback
           if (output.name === "display_color_palette") {
@@ -413,7 +417,7 @@ export default function ToolPanel({
         }
       });
     }
-  }, [events, functionAdded, sendClientEvent]);
+  }, [events, sendClientEvent]);
 
   useEffect(() => {
     if (!isSessionActive) {

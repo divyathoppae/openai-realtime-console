@@ -78,6 +78,29 @@ export function handleCustomerInput(input, sendClientEvent) {
   mapEntity("customer_request", input, sendClientEvent);
 }
 
+// New handler for model's voice responses
+export function handleModelResponse(response, sendClientEvent) {
+  console.log("handleModelResponse invoked with response:", response);
+
+  // Trigger the tool call for case suggestion based on the model's voice response
+  console.log("Triggering suggestCaseToolCall with response:", response);
+  const caseDetails = suggestCaseToolCall(response, jsonData);
+
+  if (caseDetails) {
+    console.log("Emitting suggest_case event with case details:", caseDetails);
+    sendClientEvent({
+      type: "suggest_case",
+      case: caseDetails,
+    });
+  } else {
+    console.log("No case details to emit for response:", response);
+  }
+
+  // Emit a map entity event for the response
+  console.log("Emitting map_entity event for response:", response);
+  mapEntity("model_response", response, sendClientEvent);
+}
+
 // Example usage of the handler with a mock sendClientEvent function
 const mockSendClientEvent = (event) => {
   console.log("Event emitted:", event);
