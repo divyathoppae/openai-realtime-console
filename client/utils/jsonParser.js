@@ -56,6 +56,19 @@ export function suggestCaseToolCall(request, jsonData) {
   }
 }
 
+// Function to simulate a tool call for case suggestion based on model response
+export function suggestCaseToolCallForResponse(response, jsonData) {
+  console.log("suggestCaseToolCallForResponse invoked with response:", response);
+  const caseDetails = findCaseForModelResponse(response, jsonData);
+  if (caseDetails) {
+    console.log("Tool call: suggest_case", caseDetails);
+    return caseDetails;
+  } else {
+    console.log("No matching case found for response:", response);
+    return null;
+  }
+}
+
 // Updated handler for customer input to trigger both tool call and entity mapping
 export function handleCustomerInput(input, sendClientEvent) {
   console.log("handleCustomerInput invoked with input:", input);
@@ -79,12 +92,32 @@ export function handleCustomerInput(input, sendClientEvent) {
 }
 
 // New handler for model's voice responses
+export function findCaseForModelResponse(response, jsonData) {
+  console.log("findCaseForModelResponse called with response:", response);
+  const cases = jsonData.pyDADInfo.pyCandidateCaseTypes;
+  for (const caseType of cases) {
+    const fields = caseType.pyDCDInfo.pyCandidateFields;
+    for (const field of fields) {
+      if (field.pyLabel.toLowerCase().includes(response.toLowerCase())) {
+        console.log("Matching case found for model response:", caseType.pyLabel);
+        return {
+          case_name: caseType.pyLabel,
+          case_description: caseType.pyDescription,
+        };
+      }
+    }
+  }
+  console.log("No matching case found for model response:", response);
+  return null;
+}
+
+// Update handleModelResponse to use the new function
 export function handleModelResponse(response, sendClientEvent) {
   console.log("handleModelResponse invoked with response:", response);
 
   // Trigger the tool call for case suggestion based on the model's voice response
   console.log("Triggering suggestCaseToolCall with response:", response);
-  const caseDetails = suggestCaseToolCall(response, jsonData);
+  const caseDetails = findCaseForModelResponse(response, jsonData);
 
   if (caseDetails) {
     console.log("Emitting suggest_case event with case details:", caseDetails);

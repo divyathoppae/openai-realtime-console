@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CloudLightning, CloudOff, MessageSquare } from "react-feather";
 import Button from "./Button";
 import { handleCustomerInput } from '../utils/jsonParser'
-
+import { handleModelResponse } from '../utils/jsonParser'
 
 function SessionStopped({ startSession }) {
   const [isActivating, setIsActivating] = useState(false);
@@ -34,7 +34,7 @@ function SessionActive({ stopSession, sendTextMessage, sendClientEvent }) {
     sendTextMessage(message);
     
     handleCustomerInput(message, sendClientEvent); //This triggers suggest_case + map_entity
-
+    handleModelResponse(message, sendClientEvent); //This triggers suggest_case + map_entity for model's response
     setMessage("");
   }
 

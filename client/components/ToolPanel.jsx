@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ExamplePrompts from './ExamplePrompts';
+import { handleModelResponse } from "../utils/jsonParser";
 
 // Define multiple function tools for practice
 export const tools = {
